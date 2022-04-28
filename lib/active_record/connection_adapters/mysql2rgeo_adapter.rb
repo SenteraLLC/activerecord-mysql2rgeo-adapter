@@ -92,6 +92,15 @@ module ActiveRecord
           super
         end
       end
+
+      def lookup_cast_type(sql_type)
+        if RGeo::ActiveRecord.geometric_type_from_name(sql_type)
+          ActiveRecord::Type.register(sql_type.to_sym, Type::Spatial.new(sql_type.to_sym))
+          return Type::Spatial.new(sql_type)
+        end
+        
+        super(sql_type)
+      end
     end
   end
 end

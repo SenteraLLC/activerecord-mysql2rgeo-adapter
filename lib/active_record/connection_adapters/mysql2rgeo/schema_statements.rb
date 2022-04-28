@@ -106,6 +106,15 @@ module ActiveRecord
           @spatial_column_info ||= {}
           @spatial_column_info[table_name.to_sym] = SpatialColumnInfo.new(self, table_name.to_s)
         end
+
+        def fetch_type_metadata(sql_type, extra = "")
+          if RGeo::ActiveRecord.geometric_type_from_name(sql_type)
+            meta_data = ActiveRecord::ConnectionAdapters::SqlTypeMetadata.new(sql_type: sql_type, type: :geometry, limit: nil, precision: nil, scale: nil)
+            return MySQL::TypeMetadata.new(meta_data, extra: extra)
+          end
+
+          return super(sql_type, extra)
+        end
       end
     end
   end
