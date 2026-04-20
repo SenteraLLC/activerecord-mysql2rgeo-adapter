@@ -37,12 +37,22 @@ Gemfile:
 gem 'activerecord-mysql2rgeo-adapter'
 ```
 
+#### Version 8.1
+
+Requirements:
+
+```
+ActiveRecord 8.1
+Ruby 3.1+ (no JRuby support yet)
+MySQL 8.0+
+```
+
 #### Version 8.0
 
 Requirements:
 
 ```
-ActiveRecord 7.2
+ActiveRecord 8.0
 Ruby 3.1+ (no JRuby support yet)
 MySQL 8.0+
 ```

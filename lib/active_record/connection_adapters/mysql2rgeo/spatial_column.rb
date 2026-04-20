@@ -4,7 +4,7 @@ module ActiveRecord # :nodoc:
   module ConnectionAdapters # :nodoc:
     module Mysql2Rgeo # :nodoc:
       class SpatialColumn < ConnectionAdapters::MySQL::Column # :nodoc:
-        def initialize(name, default, sql_type_metadata = nil, null = true, default_function = nil, collation: nil, comment: nil, spatial: nil, **)
+        def initialize(name, cast_type, default, sql_type_metadata = nil, null = true, default_function = nil, collation: nil, comment: nil, spatial: nil, **)
           @sql_type_metadata = sql_type_metadata
           if spatial
             # This case comes from an entry in the geometry_columns table
@@ -14,10 +14,9 @@ module ActiveRecord # :nodoc:
             build_from_sql_type(sql_type_metadata.sql_type)
           elsif sql_type_metadata.sql_type =~ /geometry|point|linestring|polygon/i
             # A geometry column with no geometry_columns entry.
-            # @geometric_type = geo_type_from_sql_type(sql_type)
             build_from_sql_type(sql_type_metadata.sql_type)
           end
-          super(name, default, sql_type_metadata, null, default_function, collation: collation, comment: comment)
+          super(name, cast_type, default, sql_type_metadata, null, default_function, collation: collation, comment: comment)
           if spatial?
             if @srid
               @limit = { type: geometric_type.type_name.underscore, srid: @srid }
