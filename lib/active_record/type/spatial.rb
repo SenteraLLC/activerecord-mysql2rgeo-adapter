@@ -92,6 +92,7 @@ module ActiveRecord
           RGeo::WKRep::WKBParser.new(spatial_factory(srid), support_ewkb: true, default_srid: srid).parse(string[8..-1])
         else
           string, srid = Arel::Visitors::Mysql2Rgeo.parse_node(string)
+          srid = @srid if srid.zero?
           RGeo::WKRep::WKTParser.new(spatial_factory(srid), support_ewkt: true, default_srid: srid).parse(string)
         end
       rescue RGeo::Error::ParseError, RGeo::Error::InvalidGeometry
