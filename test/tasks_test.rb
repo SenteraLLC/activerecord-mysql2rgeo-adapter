@@ -58,8 +58,8 @@ class TasksTest < ActiveSupport::TestCase
       ActiveRecord::SchemaDumper.dump(connection, file)
     end
     data = File.read(tmp_sql_filename)
-    assert_includes data, "t.geometry \"object1\", limit: {:type=>\"geometry\", :srid=>#{connection.default_srid}"
-    assert_includes data, "t.geometry \"object2\", limit: {:type=>\"geometry\", :srid=>#{connection.default_srid}"
+    assert_includes data, "t.geometry \"object1\", limit: {type: \"geometry\", srid: #{connection.default_srid}"
+    assert_includes data, "t.geometry \"object2\", limit: {type: \"geometry\", srid: #{connection.default_srid}"
   end
 
   def test_basic_geography_schema_dump
@@ -72,14 +72,41 @@ class TasksTest < ActiveSupport::TestCase
       ActiveRecord::SchemaDumper.dump(connection, file)
     end
     data = File.read(tmp_sql_filename)
-    assert_includes data, %(t.geometry "latlon1", limit: {:type=>"point", :srid=>0})
+    assert_includes data, %(t.geometry "latlon1", limit: {type: "point", srid: 0})
     if connection.supports_index_sort_order?
       assert_includes(data,
-                      %(t.geometry "latlon2", limit: {:type=>"point", :srid=>4326}))
+                      %(t.geometry "latlon2", limit: {type: "point", srid: 4326}))
     else
       assert_includes(data,
-                      %(t.geometry "latlon2", limit: {:type=>"point", :srid=>0}))
+                      %(t.geometry "latlon2", limit: {type: "point", srid: 0}))
     end
+  end
+
+  def test_all_spatial_types_schema_dump
+    setup_database_tasks
+    connection.create_table(:spatial_test, force: true) do |t|
+      t.geometry "geo_col"
+      t.point "pt_col"
+      t.linestring "ls_col"
+      t.polygon "poly_col"
+      t.multipoint "mpt_col"
+      t.multilinestring "mls_col"
+      t.multipolygon "mpoly_col"
+      t.geometrycollection "gc_col"
+    end
+    File.open(tmp_sql_filename, "w:utf-8") do |file|
+      ActiveRecord::SchemaDumper.dump(connection, file)
+    end
+    data = File.read(tmp_sql_filename)
+    refute_includes data, "Could not dump"
+    assert_includes data, %(t.geometry "geo_col", limit: {type: "geometry", srid: 0})
+    assert_includes data, %(t.geometry "pt_col", limit: {type: "point", srid: 0})
+    assert_includes data, %(t.geometry "ls_col", limit: {type: "line_string", srid: 0})
+    assert_includes data, %(t.geometry "poly_col", limit: {type: "polygon", srid: 0})
+    assert_includes data, %(t.geometry "mpt_col", limit: {type: "multi_point", srid: 0})
+    assert_includes data, %(t.geometry "mls_col", limit: {type: "multi_line_string", srid: 0})
+    assert_includes data, %(t.geometry "mpoly_col", limit: {type: "multi_polygon", srid: 0})
+    assert_includes data, %(t.geometry "gc_col", limit: {type: "geometry_collection", srid: 0})
   end
 
   def test_index_schema_dump
@@ -93,7 +120,7 @@ class TasksTest < ActiveSupport::TestCase
     end
     data = File.read(tmp_sql_filename)
     puts data
-    assert_includes data, %(t.geometry "latlon", limit: {:type=>"point", :srid=>0}, null: false)
+    assert_includes data, %(t.geometry "latlon", limit: {type: "point", srid: 0}, null: false)
     assert_includes data, %(t.index ["latlon"], name: "index_spatial_test_on_latlon", type: :spatial)
   end
 

@@ -54,6 +54,21 @@ module ActiveRecord # :nodoc:
           %i[geometry geography].include?(@sql_type_metadata.type)
         end
 
+        # Override equality to include spatial attributes (@srid, @limit).
+        # Rails 8.1's Deduplicable uses == and hash to deduplicate column objects
+        # across different tables. Without this override, two SpatialColumn objects
+        # that share the same base attributes (name, type, etc.) but differ in SRID
+        # are incorrectly treated as equal, causing the wrong column to be returned
+        # from the deduplication registry.
+        def ==(other)
+          super && @srid == other.srid && @limit == other.limit
+        end
+        alias :eql? :==
+
+        def hash
+          super ^ @srid.hash ^ @limit.hash
+        end
+
         private
 
         def set_geometric_type_from_name(name)
