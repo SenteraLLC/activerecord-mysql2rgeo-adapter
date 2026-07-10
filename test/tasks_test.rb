@@ -57,7 +57,7 @@ class TasksTest < ActiveSupport::TestCase
     File.open(tmp_sql_filename, "w:utf-8") do |file|
       ActiveRecord::SchemaDumper.dump(connection, file)
     end
-    data = File.read(tmp_sql_filename)
+    data = normalize_schema(File.read(tmp_sql_filename))
     assert_includes data, "t.geometry \"object1\", limit: {type: \"geometry\", srid: #{connection.default_srid}"
     assert_includes data, "t.geometry \"object2\", limit: {type: \"geometry\", srid: #{connection.default_srid}"
   end
@@ -71,7 +71,7 @@ class TasksTest < ActiveSupport::TestCase
     File.open(tmp_sql_filename, "w:utf-8") do |file|
       ActiveRecord::SchemaDumper.dump(connection, file)
     end
-    data = File.read(tmp_sql_filename)
+    data = normalize_schema(File.read(tmp_sql_filename))
     assert_includes data, %(t.geometry "latlon1", limit: {type: "point", srid: 0})
     if connection.supports_index_sort_order?
       assert_includes(data,
@@ -97,7 +97,7 @@ class TasksTest < ActiveSupport::TestCase
     File.open(tmp_sql_filename, "w:utf-8") do |file|
       ActiveRecord::SchemaDumper.dump(connection, file)
     end
-    data = File.read(tmp_sql_filename)
+    data = normalize_schema(File.read(tmp_sql_filename))
     refute_includes data, "Could not dump"
     assert_includes data, %(t.geometry "geo_col", limit: {type: "geometry", srid: 0})
     assert_includes data, %(t.geometry "pt_col", limit: {type: "point", srid: 0})
@@ -118,7 +118,7 @@ class TasksTest < ActiveSupport::TestCase
     File.open(tmp_sql_filename, "w:utf-8") do |file|
       ActiveRecord::SchemaDumper.dump(connection, file)
     end
-    data = File.read(tmp_sql_filename)
+    data = normalize_schema(File.read(tmp_sql_filename))
     puts data
     assert_includes data, %(t.geometry "latlon", limit: {type: "point", srid: 0}, null: false)
     assert_includes data, %(t.index ["latlon"], name: "index_spatial_test_on_latlon", type: :spatial)
@@ -147,6 +147,13 @@ class TasksTest < ActiveSupport::TestCase
   # end
 
   private
+
+  # Normalize Hash#inspect output to Ruby 3.4+ keyword-style format so that
+  # schema dump assertions work across all supported Ruby versions.
+  # Ruby < 3.4 prints {  :key=>"value"  }; Ruby 3.4+ prints {  key: "value"  }.
+  def normalize_schema(data)
+    data.gsub(/:(\w+)=>/, '\1: ')
+  end
 
   def new_connection(options = {})
     configuration_options = { "database" => "mysql2rgeo_tasks_test" }.merge(options)
