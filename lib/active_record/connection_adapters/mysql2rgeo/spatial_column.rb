@@ -4,7 +4,7 @@ module ActiveRecord # :nodoc:
   module ConnectionAdapters # :nodoc:
     module Mysql2Rgeo # :nodoc:
       class SpatialColumn < ConnectionAdapters::MySQL::Column # :nodoc:
-        def initialize(name, default, sql_type_metadata = nil, null = true, default_function = nil, collation: nil, comment: nil, spatial: nil, **)
+        def initialize(name, cast_type, default, sql_type_metadata = nil, null = true, default_function = nil, collation: nil, comment: nil, spatial: nil, **)
           @sql_type_metadata = sql_type_metadata
           if spatial
             # This case comes from an entry in the geometry_columns table
@@ -14,10 +14,9 @@ module ActiveRecord # :nodoc:
             build_from_sql_type(sql_type_metadata.sql_type)
           elsif sql_type_metadata.sql_type =~ /geometry|point|linestring|polygon/i
             # A geometry column with no geometry_columns entry.
-            # @geometric_type = geo_type_from_sql_type(sql_type)
             build_from_sql_type(sql_type_metadata.sql_type)
           end
-          super(name, default, sql_type_metadata, null, default_function, collation: collation, comment: comment)
+          super(name, cast_type, default, sql_type_metadata, null, default_function, collation: collation, comment: comment)
           if spatial?
             if @srid
               @limit = { type: geometric_type.type_name.underscore, srid: @srid }
@@ -53,6 +52,21 @@ module ActiveRecord # :nodoc:
 
         def spatial?
           %i[geometry geography].include?(@sql_type_metadata.type)
+        end
+
+        # Override equality to include spatial attributes (@srid, @limit).
+        # Rails 8.1's Deduplicable uses == and hash to deduplicate column objects
+        # across different tables. Without this override, two SpatialColumn objects
+        # that share the same base attributes (name, type, etc.) but differ in SRID
+        # are incorrectly treated as equal, causing the wrong column to be returned
+        # from the deduplication registry.
+        def ==(other)
+          super && @srid == other.srid && @limit == other.limit
+        end
+        alias :eql? :==
+
+        def hash
+          super ^ @srid.hash ^ @limit.hash
         end
 
         private

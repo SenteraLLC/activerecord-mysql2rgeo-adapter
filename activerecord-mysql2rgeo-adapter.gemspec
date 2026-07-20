@@ -21,8 +21,8 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 2.7.0"
 
-  spec.add_dependency "activerecord", "~> 8.0.0"
-  spec.add_dependency "rgeo-activerecord", "~> 7.0.0"
+  spec.add_dependency "activerecord", ">= 8.1", "< 9"
+  spec.add_dependency "rgeo-activerecord", ">= 7.0", "< 9"
   spec.add_dependency "rgeo", "~> 3.0"
 
   spec.add_development_dependency "rake", "~> 12.0"

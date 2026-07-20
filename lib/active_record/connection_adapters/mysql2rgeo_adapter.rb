@@ -80,23 +80,21 @@ module ActiveRecord
         DEFAULT_SRID
       end
 
-      def native_database_types
-        # Add spatial types
-        # Reference: https://dev.mysql.com/doc/refman/5.6/en/spatial-type-overview.html
-        super.merge(
-          geometry:            { name: "geometry" },
-          geometrycollection:  { name: "geometrycollection" },
-          linestring:          { name: "linestring" },
-          multi_line_string:   { name: "multilinestring" },
-          multi_point:         { name: "multipoint" },
-          multi_polygon:       { name: "multipolygon" },
-          spatial:             { name: "geometry" },
-          point:               { name: "point" },
-          polygon:             { name: "polygon" }
-        )
-      end
-
       class << self
+        # Reference: https://dev.mysql.com/doc/refman/5.6/en/spatial-type-overview.html
+        def native_database_types
+          super.merge(
+            geometry:            { name: "geometry" },
+            geometrycollection:  { name: "geometrycollection" },
+            linestring:          { name: "linestring" },
+            multi_line_string:   { name: "multilinestring" },
+            multi_point:         { name: "multipoint" },
+            multi_polygon:       { name: "multipolygon" },
+            spatial:             { name: "geometry" },
+            point:               { name: "point" },
+            polygon:             { name: "polygon" }
+          )
+        end
 
         private
           def initialize_type_map(m)
